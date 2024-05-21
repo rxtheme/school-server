@@ -8,7 +8,11 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const uri = "mongodb+srv://schoolTeam:Rltdkf8lwJ3sTcUf@school.ry74srq.mongodb.net/?retryWrites=true&w=majority&appName=school";
+// const uri = "mongodb+srv://schoolTeam:Rltdkf8lwJ3sTcUf@school.ry74srq.mongodb.net/?retryWrites=true&w=majority&appName=school";
+
+
+const uri = "mongodb+srv://forSchool:5DCnA4NQvH2DZX2V@cluster0.mtbweb5.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+
 
 const client = new MongoClient(uri, {
    serverApi: {
@@ -20,43 +24,31 @@ const client = new MongoClient(uri, {
 
 async function run() {
    try {
-      // Connect the client to the server
       await client.connect();
-      const db = client.db("SchoolDB");
-      const collection = db.collection("schoolApplies"); // Consistent collection name
+      console.log("mongodb is connecting");
+      const db = client.db("StudentsDB");
+      const StudentsCollection = db.collection("students");
 
-      // Send a ping to confirm a successful connection
-      await client.db("admin").command({ ping: 1 });
-      console.log("Pinged your deployment. You successfully connected to MongoDB!");
+      app.get("/", (req, res) => {
+         res.send("Server is running...");
+      });
 
-      // Define the insertOne function for the collection
-      async function insertApplyRequest(applyRequest) {
-         const result = await collection.insertOne(applyRequest);
-         return result;
-      }
-      app.get("/apply", async (req, res) => {
+      app.get("/application", async (req, res) => {
          try {
-            const result = await collection.findOne({}).toArray();
+            const result = await StudentsCollection.find({}).toArray();
             res.send(result);
          } catch (error) {
             console.log('new error from apply route::: ', error);
          }
       });
-      async function retrieveApplications() {
-         try {
-            const cursor = collection.find({});
-            const applications = await cursor.toArray();
-            return applications;
-         } catch (error) {
-            console.error("Error retrieving applications:", error);
-            return []; // Or throw an appropriate error for the client
-         }
-      }
 
-      app.get("/apply", async (req, res) => {
+      app.post("/application", async (req, res) => {
          try {
-            const applications = await retrieveApplications();
-            res.send(applications);
+            const apply = req.body;
+            const result = await StudentsCollection.insertOne(apply);
+            console.log("insertOne apply data:::", result);
+            res.send(result);
+
          } catch (error) {
             res.status(500).send("Error retrieving applications");
          }
