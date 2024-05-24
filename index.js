@@ -1,5 +1,5 @@
 const express = require('express');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 5000;
@@ -46,10 +46,35 @@ async function run() {
             const result = await studentsCollection.insertOne(apply);
             res.send(result);
          } catch (err) {
-            console.error('Error inserting application:', err);
+            console.error('Post Error inserting application:', err);
             res.status(500).send({ error: 'An error occurred while processing the application.' });
          }
       });
+
+      app.delete("/users/:id", async (req, res) => {
+         const id = req.params.id;
+         const query = { _id: new ObjectId(id) }
+         try {
+            const result = await studentsCollection.deleteOne(query);
+            res.send(result);
+         } catch (error) {
+            console.log("delete method:::", error);
+         }
+      });
+      app.put("/users/:id", async (req, res) => {
+         const id = req.params.id;
+         const updatedData = req.body;
+         const query = { _id: new ObjectId(id) };
+         const update = { $set: updatedData };
+         try {
+            const result = await studentsCollection.updateOne(query, update);
+            res.send(result);
+         } catch (error) {
+            console.log("UPDATE method error:", error);
+            res.status(500).send({ error: 'An error occurred while updating the student data.' });
+         }
+      });
+
 
       // Only start the server if the database connection is successful
       app.listen(port, () => {
