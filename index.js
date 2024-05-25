@@ -4,7 +4,7 @@ const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Middleware
+// middleware
 app.use(cors());
 app.use(express.json());
 
@@ -30,49 +30,53 @@ async function run() {
       app.get("/", (req, res) => {
          res.send("Server is running...");
       });
-
       app.get("/users", async (req, res) => {
          try {
             const users = await studentsCollection.find({}).toArray();
             res.send(users);
          } catch (error) {
-            console.log("API GET error:", error);
-            res.status(500).send({ error: 'An error occurred while fetching users.' });
+            console.log("api get a error::: ", error);
          }
-      });
+      })
 
       app.post("/users", async (req, res) => {
          try {
-            const newStudent = req.body;
-            // Generate unique 6-character ID
-            let uniqueId = generateUniqueId();
-            // Check uniqueness
-            while (await studentsCollection.findOne({ customId: uniqueId })) {
-               uniqueId = generateUniqueId();
-            }
-            // Add the custom ID to the new student data
-            newStudent.customId = uniqueId;
-            console.log('New student application:', newStudent);
-            const result = await studentsCollection.insertOne(newStudent);
+            const apply = req.body;
+            console.log('New student application:', apply);
+            const result = await studentsCollection.insertOne(apply);
             res.send(result);
-         } catch (error) {
-            console.error('POST Error inserting application:', error);
+         } catch (err) {
+            console.error('Post Error inserting application:', err);
             res.status(500).send({ error: 'An error occurred while processing the application.' });
          }
       });
 
-      // Utility function to generate unique ID with 6 characters
-      function generateUniqueId() {
-         const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-         let result = '';
-         for (let i = 0; i < 6; i++) {
-            result += characters.charAt(Math.floor(Math.random() * characters.length));
+      app.delete("/users/:id", async (req, res) => {
+         const id = req.params.id;
+         const query = { _id: new ObjectId(id) }
+         try {
+            const result = await studentsCollection.deleteOne(query);
+            res.send(result);
+         } catch (error) {
+            console.log("delete method:::", error);
          }
-         return result;
-      }
+      });
+      app.put("/users/:id", async (req, res) => {
+         const id = req.params.id;
+         const updatedData = req.body;
+         const query = { _id: new ObjectId(id) };
+         const update = { $set: updatedData };
+         try {
+            const result = await studentsCollection.updateOne(query, update);
+            res.send(result);
+         } catch (error) {
+            console.log("UPDATE method error:", error);
+            res.status(500).send({ error: 'An error occurred while updating the student data.' });
+         }
+      });
 
-      // Other routes...
 
+      // Only start the server if the database connection is successful
       app.listen(port, () => {
          console.log(`Server is running at http://localhost:${port}`);
       });
@@ -80,5 +84,7 @@ async function run() {
       console.error('Error connecting to MongoDB:', err);
    }
 }
+
+
 
 run().catch(console.error);
