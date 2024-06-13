@@ -26,6 +26,7 @@ async function run() {
 
       const database = client.db("UsersDB");
       const studentsCollection = database.collection("user");
+      const noticesCollection = database.collection("notices");
 
       app.get("/", (req, res) => {
          res.send("Server is running...");
@@ -58,6 +59,26 @@ async function run() {
          } catch (error) {
             console.error('POST Error inserting application:', error);
             res.status(500).send({ error: 'An error occurred while processing the application.' });
+         }
+      });
+      app.get("/notice", async (req, res) => {
+         try {
+            const notice = await noticesCollection.find({}).toArray();
+            res.send(notice);
+         } catch (error) {
+            console.log("notice is not working:::", error);
+         }
+      })
+      app.post("/notices", async (req, res) => {
+         try {
+            const newNotice = req.body;
+            // You can add validation here
+            console.log('New notice:', newNotice);
+            const result = await noticesCollection.insertOne(newNotice);
+            res.send(result);
+         } catch (error) {
+            console.error('POST Error inserting notice:', error);
+            res.status(500).send({ error: 'An error occurred while processing the notice.' });
          }
       });
 
