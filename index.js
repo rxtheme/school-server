@@ -61,7 +61,7 @@ async function run() {
             res.status(500).send({ error: 'An error occurred while processing the application.' });
          }
       });
-      app.get("/notice", async (req, res) => {
+      app.get("/notices", async (req, res) => {
          try {
             const notice = await noticesCollection.find({}).toArray();
             res.send(notice);
