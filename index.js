@@ -27,6 +27,7 @@ async function run() {
       const database = client.db("UsersDB");
       const studentsCollection = database.collection("user");
       const noticesCollection = database.collection("notices");
+      const blogCollection = database.collection("blogs");
 
       app.get("/", (req, res) => {
          res.send("Server is running...");
@@ -71,7 +72,25 @@ async function run() {
             res.status(500).send({ error: 'An error occurred while processing the notice.' });
          }
       });
+      app.get("/blog", async (req, res) => {
+         try {
+            const blog = await blogCollection.find({}).toArray();
+            res.send(blog);
 
+         } catch (error) {
+            console.log("blog side error from server:::", error);
+         }
+      })
+      app.post("/blog", async (req, res) => {
+         try {
+            const newBlog = req.body;
+            console.log('new Blog', newBlog);
+            const result = await blogCollection.insertOne(newBlog);
+            res.send(result);
+         } catch (error) {
+            console.log("blog error from server:::", error);
+         }
+      })
       app.delete("/users/:id", async (req, res) => {
          const id = req.params.id;
          const query = { _id: new ObjectId(id) }
