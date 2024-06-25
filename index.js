@@ -4,7 +4,7 @@ const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 5000;
 
-// middleware
+// Middleware
 app.use(cors());
 app.use(express.json());
 
@@ -18,7 +18,6 @@ const client = new MongoClient(uri, {
    },
 });
 
-
 async function run() {
    try {
       await client.connect();
@@ -28,79 +27,112 @@ async function run() {
       const studentsCollection = database.collection("user");
       const noticesCollection = database.collection("notices");
       const blogCollection = database.collection("blogs");
+      const teacherCollection = database.collection("teachers");
 
       app.get("/", (req, res) => {
          res.send("Server is running...");
       });
+
       app.get("/users", async (req, res) => {
          try {
             const users = await studentsCollection.find({}).toArray();
             res.send(users);
          } catch (error) {
-            console.log("api get a error::: ", error);
+            console.error("Error fetching users:", error);
+            res.status(500).send({ error: 'An error occurred while fetching users.' });
          }
-      })
+      });
 
       app.post("/users", async (req, res) => {
          try {
-            const apply = req.body;
-            console.log('New student application:', apply);
-            const result = await studentsCollection.insertOne(apply);
+            const newUser = req.body;
+            console.log('New student application:', newUser);
+            const result = await studentsCollection.insertOne(newUser);
             res.send(result);
-         } catch (err) {
-            console.error('Post Error inserting application:', err);
-            res.status(500).send({ error: 'An error occurred while processing the application.' });
+         } catch (error) {
+            console.error('Error inserting user:', error);
+            res.status(500).send({ error: 'An error occurred while processing the user.' });
          }
       });
+
       app.get("/notices", async (req, res) => {
          try {
-            const notice = await noticesCollection.find({}).toArray();
-            res.send(notice);
+            const notices = await noticesCollection.find({}).toArray();
+            res.send(notices);
          } catch (error) {
-            console.log("notice is not working:::", error);
+            console.error("Error fetching notices:", error);
+            res.status(500).send({ error: 'An error occurred while fetching notices.' });
          }
-      })
+      });
+
       app.post("/notices", async (req, res) => {
          try {
             const newNotice = req.body;
-            // You can add validation here
             console.log('New notice:', newNotice);
             const result = await noticesCollection.insertOne(newNotice);
             res.send(result);
          } catch (error) {
-            console.error('POST Error inserting notice:', error);
+            console.error('Error inserting notice:', error);
             res.status(500).send({ error: 'An error occurred while processing the notice.' });
          }
       });
+
       app.get("/blog", async (req, res) => {
          try {
-            const blog = await blogCollection.find({}).toArray();
-            res.send(blog);
-
+            const blogs = await blogCollection.find({}).toArray();
+            res.send(blogs);
          } catch (error) {
-            console.log("blog side error from server:::", error);
+            console.error("Error fetching blogs:", error);
+            res.status(500).send({ error: 'An error occurred while fetching blogs.' });
          }
-      })
+      });
+
       app.post("/blog", async (req, res) => {
          try {
             const newBlog = req.body;
-            console.log('new Blog', newBlog);
+            console.log('New blog:', newBlog);
             const result = await blogCollection.insertOne(newBlog);
             res.send(result);
          } catch (error) {
-            console.log("blog error from server:::", error);
+            console.error('Error inserting blog:', error);
+            res.status(500).send({ error: 'An error occurred while processing the blog.' });
          }
-      })
+      });
+
+      app.get("/teachers", async (req, res) => {
+         try {
+            const teachers = await teacherCollection.find({}).toArray();
+            res.send(teachers);
+         } catch (error) {
+            console.error('Error fetching teachers:', error);
+            res.status(500).send({ error: 'An error occurred while fetching teachers.' });
+         }
+      });
+
+      app.post("/teachers", async (req, res) => {
+         try {
+            const newTeacher = req.body;
+            console.log('New teacher:', newTeacher);
+            const result = await teacherCollection.insertOne(newTeacher);
+            res.send(result);
+         } catch (error) {
+            console.error('Error inserting teacher:', error);
+            res.status(500).send({ error: 'An error occurred while processing the teacher.' });
+         }
+      });
+
       app.delete("/users/:id", async (req, res) => {
          const id = req.params.id;
-         const query = { _id: new ObjectId(id) }
+         const query = { _id: new ObjectId(id) };
          try {
             const result = await studentsCollection.deleteOne(query);
             res.send(result);
          } catch (error) {
-            console.log("delete method:::", error);
+            console.error('Error deleting user:', error);
+            res.status(500).send({ error: 'An error occurred while deleting the user.' });
          }
       });
+
       app.put("/users/:id", async (req, res) => {
          const id = req.params.id;
          const updatedData = req.body;
@@ -110,21 +142,18 @@ async function run() {
             const result = await studentsCollection.updateOne(query, update);
             res.send(result);
          } catch (error) {
-            console.log("UPDATE method error:", error);
-            res.status(500).send({ error: 'An error occurred while updating the student data.' });
+            console.error('Error updating user:', error);
+            res.status(500).send({ error: 'An error occurred while updating the user.' });
          }
       });
 
-
-      // Only start the server if the database connection is successful
       app.listen(port, () => {
          console.log(`Server is running at http://localhost:${port}`);
       });
    } catch (err) {
       console.error('Error connecting to MongoDB:', err);
+      process.exit(1); // Exit process with failure
    }
 }
-
-
 
 run().catch(console.error);
