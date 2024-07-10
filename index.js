@@ -29,6 +29,7 @@ async function run() {
     const noticesCollection = database.collection("notices");
     const blogCollection = database.collection("blogs");
     const teacherCollection = database.collection("teachers");
+    const faqCollection = database.collection("faq");
 
     app.get("/", (req, res) => {
       res.send("Server is running...");
@@ -132,7 +133,14 @@ async function run() {
           .send({ error: "An error occurred while fetching teachers." });
       }
     });
-
+    app.get("/faq", async (req, res) => {
+      try {
+        const faq = await faqCollection.find({}).toArray();
+        res.send(faq);
+      } catch (error) {
+        console.log("faq server site get error:", error);
+      }
+    })
     app.post("/teachers", async (req, res) => {
       try {
         const newTeacher = req.body;
@@ -147,6 +155,17 @@ async function run() {
       }
     });
 
+    app.post("/faq", async (req, res) => {
+      try {
+        const newFAQ = req.body;
+        console.log('new faq: ', newFAQ);
+        const result = await faqCollection.insertOne(newFAQ);
+        res.send(result);
+      } catch (error) {
+        console.error("error faq server", error);
+      }
+    })
+
     app.delete("/users/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -160,6 +179,35 @@ async function run() {
           .send({ error: "An error occurred while deleting the user." });
       }
     });
+    app.delete("/faq/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      try {
+        const result = await faqCollection.deleteOne(query);
+        res.send(result);
+      } catch (error) {
+        console.error("Error deleting FAQ:", error);
+        res.status(500).send({ error: "An error occurred while deleting the FAQ." });
+      }
+    });
+
+    app.delete("/teachers/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      try {
+        const result = await teacherCollection.deleteOne(query);
+        console.log(result);
+        if (result.deletedCount === 1) {
+          res.send({ acknowledged: true });
+        } else {
+          res.status(404).send({ acknowledged: false, error: "Teacher not found" });
+        }
+      } catch (error) {
+        console.error("Error deleting teacher:", error);
+        res.status(500).send({ error: "An error occurred while deleting the teacher." });
+      }
+    });
+
 
     app.put("/users/:id", async (req, res) => {
       const id = req.params.id;
@@ -178,10 +226,10 @@ async function run() {
     });
 
     app.listen(port, () => {
-      console.log(`Server is running at http://localhost:${port}`);
+      console.log(`"Server is running at http://localhost:${port}`);
     });
-  } catch (err) {
-    console.error("Error connecting to MongoDB:", err);
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
     process.exit(1); // Exit process with failure
   }
 }
